@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev-*
+    tags:
+      - v*
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: windows-2019, arch: x64, os: windows }
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup MinGW64
+        if: matrix.os == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          install: >-
+            mingw-w64-x86_64-gcc
+      - name: Setup go compiler
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          check-latest: false
+      - name: Build
+        if: matrix.arch != 'arm32'
+        run: go build -o testsign .
+      - name: Codesign windows app
+        if: matrix.os == 'windows'
+        uses: dlemstra/code-sign-action@v1
+        with:
+          certificate: ${{ secrets.CODESIGN_WIN_CERTIFICATE }}
+          password: ${{ secrets.CODESIGN_WIN_PASS }}
+          folder: './tmp'
+          recursive: false
+          files: |
+            testsign.exe
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: testsign-snapshot-${{ matrix.os }}-${{ matrix.arch }}
+          retention-days: 5
+          path: testsign.exe
