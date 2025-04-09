@@ -42,7 +42,7 @@ jobs:
         with:
           certificate: ${{ secrets.CODESIGN_WIN_CERTIFICATE }}
           password: ${{ secrets.CODESIGN_WIN_PASS }}
-          folder: './tmp'
+          folder: '.'
           recursive: false
           files: |
             testsign.exe
