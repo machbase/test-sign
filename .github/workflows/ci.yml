@@ -35,7 +35,7 @@ jobs:
           check-latest: false
       - name: Build
         if: matrix.arch != 'arm32'
-        run: go build -o testsign .
+        run: go build -o testsign.exe .
       - name: Codesign windows app
         if: matrix.os == 'windows'
         uses: dlemstra/code-sign-action@v1
